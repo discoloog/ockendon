@@ -78,7 +78,7 @@ button:hover {
                 <li><strong>Ockendon 42 Film Festival</strong></li>
             </ul>
             <ul>
-                <li><button href="#tickets" class="primary">Get Tickets</button></li>
+                <li><button id="getTickets" class="primary">Get Tickets</button></li>
             </ul>
         </nav>
     </header>
@@ -90,12 +90,26 @@ button:hover {
             <div style="margin: auto" class="container">
                 <h1>A Celebration of Short Films</h1>
                 <p>Ockendon 42 is an independent short film festival, born from a summer in Assos, Turkey. Join us in London for an inspiring showcase of creativity.</p>
-                <form>
+                <form id="subscribeForm">
                     <fieldset role="group">
-                      <input name="email" type="email" placeholder="Enter your email" autocomplete="email" />
-                      <input type="submit" value="Subscribe" />
+                        <input id="emailInput" name="email" type="email" placeholder="Enter your email" required>
+                        <input type="submit" value="Subscribe">
                     </fieldset>
-                  </form>
+                </form>
+                
+                <script>
+                document.getElementById("subscribeForm").addEventListener("submit", function(event) {
+                    event.preventDefault();
+                    var email = document.getElementById("emailInput").value;
+                    fetch("https://script.google.com/macros/s/AKfycbwzGU--xq9BaxSMlnNS8SRspTOOPLkF1vGggyoeFefFO7xteWcNJU1_5FC1SMZNsq8C/exec", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "email=" + encodeURIComponent(email)
+                    })
+                    .then(response => alert("Subscription successful!"))
+                    .catch(error => alert("Error! Try again."));
+                });
+                </script>
             </div>
         </div>
     </section>
@@ -122,6 +136,66 @@ button:hover {
     <footer class="container grid">
         <small>&copy; 2025 Ockendon 42 Film Festival. All rights reserved.</small>
     </footer>
+    <dialog id="ticketModal">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev"></button>
+                <p>
+                  <strong>🗓️ Tickets Not Yet Available</strong>
+                </p>
+              </header>
+            <p>Tickets for the Ockendon 42 Film Festival are not yet available. Subscribe to our newsletter to stay updated!</p>
+            <form id="modalSubscribeForm">
+                <fieldset role="group">
+                    <input id="modalEmailInput" name="email" type="email" placeholder="Enter your email" required>
+                    <input type="submit" value="Subscribe">
+                </fieldset>
+            </form>
+        </article>
+    </dialog>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("getTickets").addEventListener("click", function() {
+                document.getElementById("ticketModal").showModal();
+            });
 
+            // The close button in the modal header
+            document.querySelector('dialog button[aria-label="Close"]').addEventListener("click", function() {
+                document.getElementById("ticketModal").close();
+            });
+            
+            document.getElementById("modalSubscribeForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+                var email = document.getElementById("modalEmailInput").value;
+                
+                // Disable the submit button to prevent multiple submissions
+                var submitButton = this.querySelector('input[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.value = "Submitting...";
+                
+                fetch("https://script.google.com/macros/s/AKfycbwzGU--xq9BaxSMlnNS8SRspTOOPLkF1vGggyoeFefFO7xteWcNJU1_5FC1SMZNsq8C/exec", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "email=" + encodeURIComponent(email)
+                })
+                .then(response => {
+                    alert("Subscription successful!");
+                    // Only close the modal after successful submission
+                    setTimeout(function() {
+                        document.getElementById("ticketModal").close();
+                    }, 1000);
+                })
+                .catch(error => {
+                    alert("Error! Try again.");
+                    // Re-enable the submit button on error
+                    submitButton.disabled = false;
+                    submitButton.value = "Subscribe";
+                });
+                
+                // Return false to ensure the form doesn't submit
+                return false;
+            });
+        });
+    </script>
 </body>
 </html>
