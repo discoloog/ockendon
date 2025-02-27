@@ -29,6 +29,7 @@
     --text-color: #EAEAEA;
     --background-color: #010101;
     --tertiary-color: #151515;
+    --animation-duration: 0.8s;
 }
 :root {
     --pico-primary-background: #782751 !important;
@@ -62,12 +63,53 @@ button:hover {
     background-color: var(--accent-color);
 }
 
-    img {
-        max-height: 400px;
-    }
-    article > img {
-        max-height: 200px;
-    }
+img {
+    max-height: 400px;
+}
+article > img {
+    max-height: 200px;
+}
+
+/* Animation classes */
+.animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity var(--animation-duration) ease, transform var(--animation-duration) ease;
+}
+
+.animate.fade-in {
+    opacity: 0;
+    transform: translateY(0);
+}
+
+.animate.slide-up {
+    transform: translateY(30px);
+}
+
+.animate.slide-left {
+    transform: translateX(30px);
+}
+
+.animate.slide-right {
+    transform: translateX(-30px);
+}
+
+.animate.zoom-in {
+    transform: scale(0.9);
+}
+
+/* Animation active state */
+.animate.active {
+    opacity: 1;
+    transform: translate(0) scale(1);
+}
+
+/* Delay classes */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+.delay-500 { transition-delay: 0.5s; }
 </style>
 <body>
 
@@ -86,11 +128,11 @@ button:hover {
     <!-- Hero Section -->
     <section class="container">
         <div class="grid">
-            <img style="margin: auto" src="logo.png" alt="Ockendon 42 Film Festival Poster">
+            <img class="animate fade-in" style="margin: auto" src="logo.png" alt="Ockendon 42 Film Festival Poster">
             <div style="margin: auto" class="container">
-                <h1>A Celebration of Short Films</h1>
-                <p>Ockendon 42 is an independent short film festival, born from a summer in Assos, Turkey. Join us in London for an inspiring showcase of creativity.</p>
-                <form id="subscribeForm">
+                <h1 class="animate slide-up">A Celebration of Short Films</h1>
+                <p class="animate slide-up delay-200">Ockendon 42 is an independent short film festival, born from a summer in Assos, Turkey. Join us in London for an inspiring showcase of creativity.</p>
+                <form id="subscribeForm" class="animate slide-up delay-300">
                     <fieldset role="group">
                         <input id="emailInput" name="email" type="email" placeholder="Enter your email" required>
                         <input type="submit" value="Subscribe">
@@ -118,17 +160,17 @@ button:hover {
     <section id="about" class="container">
         <!-- Schedule -->
         <!-- <article> -->
-            <article>
+            <article class="animate fade-in">
                     <div class="grid">
                     <section id="schedule" class="container">
-                        <h2>About the Festival</h2>
-                        <p>Ockendon 42 Film Festival is an intimate gathering of film lovers and creators, celebrating short films from around the world. Organized by a group of friends, the festival was conceived during a summer vacation in Assos, Aegean Turkey.</p>
-                        <strong>Festival Schedule</strong>
-                        <p>September 7-9, 2025 | Full lineup coming soon.</p>
-                        <strong>Location</strong>
-                        <p>42 Ockendon, London</p>
+                        <h2 class="animate slide-right">About the Festival</h2>
+                        <p class="animate slide-right delay-100">Ockendon 42 Film Festival is an intimate gathering of film lovers and creators, celebrating short films from around the world. Organized by a group of friends, the festival was conceived during a summer vacation in Assos, Aegean Turkey.</p>
+                        <strong class="animate slide-right delay-200">Festival Schedule</strong>
+                        <p class="animate slide-right delay-300">September 7-9, 2025 | Full lineup coming soon.</p>
+                        <strong class="animate slide-right delay-400">Location</strong>
+                        <p class="animate slide-right delay-500">42 Ockendon, London</p>
                     </section>
-                    <img style="margin: auto" src="assos.png" alt="Ockendon 42 Film Festival Poster">   
+                    <img class="animate slide-left" style="margin: auto" src="assos.png" alt="Ockendon 42 Film Festival Poster">   
                 </div>
                 </article>
     </section>
@@ -155,6 +197,7 @@ button:hover {
     </dialog>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Ticket modal functionality
             document.getElementById("getTickets").addEventListener("click", function() {
                 document.getElementById("ticketModal").showModal();
             });
@@ -164,6 +207,7 @@ button:hover {
                 document.getElementById("ticketModal").close();
             });
             
+            // Modal subscribe form submission
             document.getElementById("modalSubscribeForm").addEventListener("submit", function(event) {
                 event.preventDefault();
                 var email = document.getElementById("modalEmailInput").value;
@@ -195,6 +239,47 @@ button:hover {
                 // Return false to ensure the form doesn't submit
                 return false;
             });
+            
+            // Scroll animations using Intersection Observer
+            const animateElements = document.querySelectorAll('.animate');
+            
+            // Add active class to elements that are already visible on page load
+            animateElements.forEach(element => {
+                if (isElementInViewport(element)) {
+                    element.classList.add('active');
+                }
+            });
+            
+            // Create the observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        // Unobserve after animation is triggered
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                root: null, // viewport
+                threshold: 0.1, // trigger when 10% of the element is visible
+                rootMargin: '0px 0px -50px 0px' // trigger slightly before element enters viewport
+            });
+            
+            // Observe all elements with animation classes
+            animateElements.forEach(element => {
+                observer.observe(element);
+            });
+            
+            // Helper function to check if element is in viewport
+            function isElementInViewport(el) {
+                const rect = el.getBoundingClientRect();
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+            }
         });
     </script>
 </body>
