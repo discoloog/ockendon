@@ -70,46 +70,67 @@ article > img {
     max-height: 200px;
 }
 
-/* Animation classes */
+/* Animation classes - optimized for performance */
 .animate {
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity var(--animation-duration) ease, transform var(--animation-duration) ease;
+    will-change: opacity, transform;
+    transition: opacity var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .animate.fade-in {
     opacity: 0;
-    transform: translateY(0);
 }
 
 .animate.slide-up {
-    transform: translateY(30px);
+    transform: translateY(20px);
+    transition: opacity var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1), 
+                transform var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .animate.slide-left {
-    transform: translateX(30px);
+    transform: translateX(20px);
+    transition: opacity var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1), 
+                transform var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .animate.slide-right {
-    transform: translateX(-30px);
-}
-
-.animate.zoom-in {
-    transform: scale(0.9);
+    transform: translateX(-20px);
+    transition: opacity var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1), 
+                transform var(--animation-duration) cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* Animation active state */
 .animate.active {
     opacity: 1;
-    transform: translate(0) scale(1);
+    transform: translate(0);
 }
 
-/* Delay classes */
-.delay-100 { transition-delay: 0.1s; }
-.delay-200 { transition-delay: 0.2s; }
-.delay-300 { transition-delay: 0.3s; }
-.delay-400 { transition-delay: 0.4s; }
-.delay-500 { transition-delay: 0.5s; }
+/* Delay classes - reduced for mobile */
+.delay-100 { transition-delay: 0.05s; }
+.delay-200 { transition-delay: 0.1s; }
+.delay-300 { transition-delay: 0.15s; }
+.delay-400 { transition-delay: 0.2s; }
+.delay-500 { transition-delay: 0.25s; }
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .animate {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* Simplified animations for mobile */
+@media (max-width: 768px) {
+    .animate {
+        transition-duration: 0.5s;
+    }
+    
+    .delay-100, .delay-200, .delay-300, .delay-400, .delay-500 {
+        transition-delay: 0s;
+    }
+}
 </style>
 <body>
 
@@ -240,45 +261,61 @@ article > img {
                 return false;
             });
             
-            // Scroll animations using Intersection Observer
-            const animateElements = document.querySelectorAll('.animate');
+            // Check if user prefers reduced motion
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             
-            // Add active class to elements that are already visible on page load
-            animateElements.forEach(element => {
-                if (isElementInViewport(element)) {
+            // If user prefers reduced motion, add active class to all elements immediately
+            if (prefersReducedMotion) {
+                document.querySelectorAll('.animate').forEach(element => {
                     element.classList.add('active');
-                }
-            });
-            
-            // Create the observer
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        // Unobserve after animation is triggered
-                        observer.unobserve(entry.target);
-                    }
                 });
-            }, {
-                root: null, // viewport
-                threshold: 0.1, // trigger when 10% of the element is visible
-                rootMargin: '0px 0px -50px 0px' // trigger slightly before element enters viewport
-            });
-            
-            // Observe all elements with animation classes
-            animateElements.forEach(element => {
-                observer.observe(element);
-            });
-            
-            // Helper function to check if element is in viewport
-            function isElementInViewport(el) {
-                const rect = el.getBoundingClientRect();
-                return (
-                    rect.top >= 0 &&
-                    rect.left >= 0 &&
-                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-                );
+            } else {
+                // Performance optimized scroll animations
+                const animateElements = document.querySelectorAll('.animate');
+                
+                // Add active class to elements that are already visible on page load
+                // with a slight delay to ensure smooth initial load
+                setTimeout(() => {
+                    animateElements.forEach(element => {
+                        if (isElementInViewport(element)) {
+                            element.classList.add('active');
+                        }
+                    });
+                }, 100);
+                
+                // Create the observer with optimized options
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            // Use requestAnimationFrame for smoother animations
+                            requestAnimationFrame(() => {
+                                entry.target.classList.add('active');
+                            });
+                            // Unobserve after animation is triggered
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, {
+                    root: null, // viewport
+                    threshold: 0.05, // trigger when just 5% of the element is visible
+                    rootMargin: '0px 0px -10% 0px' // trigger slightly before element enters viewport
+                });
+                
+                // Observe all elements with animation classes
+                animateElements.forEach(element => {
+                    observer.observe(element);
+                });
+                
+                // Helper function to check if element is in viewport
+                function isElementInViewport(el) {
+                    const rect = el.getBoundingClientRect();
+                    return (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                    );
+                }
             }
         });
     </script>
